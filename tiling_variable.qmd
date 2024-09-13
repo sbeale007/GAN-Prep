@@ -1,0 +1,67 @@
+---
+title: "Tiling"
+---
+## Loading libraries for python and R 
+```{python}
+import torch
+import xarray as xr
+import numpy as np
+import matplotlib.pyplot as plt
+import glob
+import pandas as  pd
+from matplotlib.patches import Rectangle
+import os 
+```
+
+```{r}
+library(terra)
+library(data.table)
+library(ncdf4)
+library(reticulate)
+library(raster)
+```
+
+# need to load in dem, prism, daymet, worldclim
+# daymet and prism should be seperate not together
+# crop daymet and dem, lat, lon, and coast seperately to prism 
+# i think I can just do the tiles seperately and then concatenate them 
+
+```{r}
+# defining study area
+studyarea <- ext(c(-150, -104.905, 47.508, 72))
+
+# loading in high res covariates
+dem.akbcyuk <- rast("C:/Users/SBEALE/Desktop/full_domain/dem.nc")
+coast <- rast("C:/Users/SBEALE/Desktop/full_domain/coast.nc")
+lat <- rast("C:/Users/SBEALE/Desktop/full_domain/lat.nc")
+lon <- rast("C:/Users/SBEALE/Desktop/full_domain/lon.nc")
+
+# loading low resolution worldclim
+wc <- rast("C:/Users/SBEALE/Desktop/full_domain/tmax_03_WorldClim_coarse_focal_max_w15.nc")
+wc_mask <- rast('C:/Users/SBEALE/Desktop/full_domain/WorldClim_mask_coarse.nc')
+
+# loading in prism and daymet (HR)
+prism <- rast("C:/Users/SBEALE/Desktop/PRISM_WC_Climatologies/no_overlap/correct/tmax_03_PRISM.nc")
+daymet <- rast("//objectstore2.nrs.bcgov/ffec/Climatologies/Daymet/daymet_1981_2010_tmax_03.tif")
+
+# projecting prism and daymet to dem 
+prism.proj <- project(prism, dem.akbcyuk)
+daymet.proj <- project(daymet, dem.akbcyuk)
+
+# cropping daymet and HR covariates for tiling with different overlap 
+daymet.crop <- crop(daymet.proj, c(-113, -105, 48, 72))
+wc.crop <- crop(wc, c(-113, -105, 48, 72))
+wc_mask.crop <- crop(wc_mask, c(-113, -105, 48, 72))
+coast.crop <- crop(coast, c(-113, -105, 48, 72))
+dem.crop <- crop(dem, c(-113, -105, 48, 72))
+lat.crop <- crop(lat, c(-113, -105, 48, 72))
+lon.crop <- crop(lon, c(-113, -105, 48, 72))
+
+plot(daymet.crop)
+```
+
+```{python}
+prism_coarse = xr.open_dataset('C:/Users/SBEALE/Desktop/full_domain/prism_coarse.nc')
+
+plt.plot(r.lat.crop)
+```
